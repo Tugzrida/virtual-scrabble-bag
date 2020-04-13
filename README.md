@@ -2,7 +2,7 @@
 
 A website I built while bored in isolation for COVID-19, inspired by [Matt Parker and Vicki Pipe discussing](https://www.youtube.com/watch?v=JaXo_i3ktwM) a more physical solution to the issue of playing Scrabble over a video call during isolation.
 
-[To play, go to the main site.](https://tugzrida.github.io/virtual-scrabble-bag)
+[To play, go to the main site.](https://tugzrida.github.io/virtual-scrabble-bag/)
 
 The code is(hopefully!) fairly simple to follow with the comments I've added, but here's the basic premise:
 
