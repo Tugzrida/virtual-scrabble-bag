@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+        <title>Virtual Scrabble Bag</title>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.4.0/js/bootstrap.bundle.min.js" integrity="sha256-zxevz2MOFpqKf3D9eeNd/gE0X679Aeg6WRhubeSA9Vc=" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/seedrandom/3.0.5/seedrandom.min.js" integrity="sha256-0usXoFraKr8ZyLyx8PGuYrttpdWaadxkFM7QhwSojNE=" crossorigin="anonymous"></script>
+        <script src="bipWords.js" integrity="sha256-x+661ivjbaZs5sReBKpJKhfthhxHP/A5kBwlxbC6dSY="></script>
+
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.4.0/css/bootstrap.min.css" integrity="sha256-/ykJw/wDxMa0AQhHDYfuMEwVb4JHMx9h4jD4XvHqVzU=" crossorigin="anonymous" />
+
+        <style>
+            html,
+            body {
+                height: 100%;
+            }
+
+            [data-dismiss=modal] {
+                float: right;
+            }
+
+            .jumbotron {
+                min-width: 80%;
+            }
+
+            #header {
+                flex-wrap: wrap;
+                align-items: center;
+                justify-content: center;
+                text-align: center;
+            }
+
+            #header h2 {
+                margin: 0.5rem 0.75rem;
+            }
+
+            #header button {
+                margin: 0.25rem;
+            }
+
+            #startMenu {
+                display: flex;
+                flex-wrap: wrap;
+            }
+
+            #startMenu button {
+                margin: 0.25rem 0.5rem;
+                flex: 1;
+            }
+
+            #seedMenu {
+                text-align: center;
+            }
+
+            #seedMenu .input-group {
+                max-width: calc(26ch + 7.5rem);
+                left: 50%;
+                transform: translateX(-50%);
+            }
+
+            #seedMenu input {
+                font-family: SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+                flex: 1 0 calc(8ch + 1.6rem);
+                text-align: center;
+            }
+
+            #seedMenu input.validate:invalid {
+                border-color: #dc3545;
+                box-shadow: 0 0 0 0.2rem rgba(220,53,69,.25);
+            }
+
+            #seedMenu input::placeholder {
+                color: #aaa;
+            }
+
+            #seedMenu #goBtn {
+                margin: 1rem;
+            }
+
+            #gameMenu * {
+                text-align: center;
+                font-size: 1.5rem;
+            }
+
+            #gameMenu div {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                margin: 0.75rem 0;
+            }
+
+            #gameMenu [data-draw-inc] {
+                padding: .375rem 1.125rem;
+                margin: 0 1rem;
+                touch-action: manipulation;
+            }
+
+            #tilesOut {
+                text-align: center;
+            }
+
+            .scrabble-tile {
+                display: inline-block;
+                background: url("blank-tile.png") top/cover;
+                width: 5rem;
+                height: 5rem;
+                font-size: 3.25rem;
+                font-weight: 600;
+                text-align: center;
+                margin-top: 7px;
+                color: #000;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="modal" id="instructions">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Welcome!</h5>
+                        <button class="close" data-dismiss="modal">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <p>
+                            Inspired by <a href="https://www.youtube.com/watch?v=JaXo_i3ktwM" target="_blank">Matt Parker and Vicki Pipe's video</a>, this page will allow multiple people to play Scrabble over a video call, each using their own board, but sharing a single bag of tiles.
+                        </p>
+                        <p>
+                            To play, one player should open this page and generate a seed. These two words will synchronise the virtual bag of tiles between everyone. The other players will then need to open this page and enter the two seed words. The third 'check' word should match between everyone if no one's made a spelling mistake.
+                        </p>
+                        <p>
+                            Each player should lay out all the tiles from their set so they can see them. To draw their initial seven letters, players can take turns pressing their green 'Draw' button. <em>When each player does this, all other players should press their red 'Discard' button</em> to remove those seven letters from their virtual bag. Once drawn, each player can place their physical tiles in their rack.
+                        </p>
+                        <p>
+                            While playing, players can draw the appropriate number of tiles according to the standard rules, however whenever any player draws, every other player must discard the same number of tiles by pressing their 'Discard' button. The number of remaining tiles should always match between all players throughout the game.
+                        </p>
+                        <p>
+                            At this stage, returning tiles to the bag is not possible, and trust of the other players is required! Addressing either of these would likely require server-side code. As it is now, this site doesn't even require an internet connection after being loaded, though of course your video call will!
+                        </p>
+                        <button class="btn btn-success" data-dismiss="modal">Ok</button>
+                    </div>
+                    <div class="modal-footer">
+                        <p><small>
+                            &copy; <a href="https://github.com/Tugzrida">Cameron Steel</a> 2020. This website is licensed under the terms of the GNU Affero General Public License. Source and more detail at <a href="https://github.com/Tugzrida/virtual-scrabble-bag">github.com/Tugzrida/virtual-scrabble-bag</a>
+                        </small></p>
+                        <p><small>
+                            SCRABBLE&reg; is a registered trademark of Hasbro, Inc. in the USA and Canada, and of Mattel, Inc. throughout the rest of the world.
+                        </small></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container-fluid h-100 d-flex">
+            <div class="jumbotron mx-auto my-auto">
+                <div class="d-flex" id="header">
+                    <h2 class="mr-md-auto">Virtual Scrabble Bag</h2>
+                    <div class="d-flex">
+                        <button class="btn btn-outline-danger" id="resetBtn" style="display: none;">Reset</button>
+                        <button class="btn btn-outline-primary" data-toggle="modal" data-target="#instructions">Instructions</button>
+                    </div>
+                </div>
+                <hr>
+
+                <div id="startMenu">
+                    <button class="btn btn-success">Enter a seed</button>
+                    <button class="btn btn-primary" id="genBtn">Generate a seed</button>
+                </div>
+
+                <div id="seedMenu" style="display: none;">
+                    <div class="input-group">
+                        <input class="form-control" id="seed1" type="text" placeholder="seed" maxlength="8" autocapitalize="none" autocorrect="off" required>
+                        <div class="input-group-prepend input-group-append">
+                            <span class="input-group-text">-</span>
+                        </div>
+                        <input class="form-control" id="seed2" type="text" placeholder="seed" maxlength="8" autocapitalize="none" autocorrect="off" required>
+                        <div class="input-group-prepend input-group-append">
+                            <span class="input-group-text">-</span>
+                        </div>
+                        <input class="form-control" id="check" type="text" placeholder="check" readonly>
+                    </div>
+                    <button class="btn btn-success" id="goBtn">Go!</button>
+                </div>
+
+                <div id="gameMenu" style="display: none;">
+                    <div>
+                        <button class="btn btn-danger" data-show-drawn="false">Discard</button>
+                    </div>
+                    <div>
+                        <button class="btn btn-primary" data-draw-inc="-1">-</button>
+                        <span id="drwCount">7 Tiles</span>
+                        <button class="btn btn-primary" data-draw-inc="1" disabled>+</button>
+                    </div>
+                    <div>
+                        <button class="btn btn-success" data-show-drawn="true">Draw</button>
+                    </div>
+                    <div>
+                        <span id="tilesLeft">100 tiles left</span>
+                    </div>
+                </div>
+                <div id="tilesOut" class="collapse">
+                    <!-- Ensure the tile background is preloaded -->
+                    <img style="display: none;" src="blank-tile.png">
+                </div>
+            </div>
+        </div>
+
+    <script>
+        // The alphabetically-sorted scrabble bag, with underscores for blank tiles.
+        const cleanBag = [
+            "A", "A", "A", "A", "A", "A", "A", "A", "A", "B",
+            "B", "C", "C", "D", "D", "D", "D", "E", "E", "E",
+            "E", "E", "E", "E", "E", "E", "E", "E", "E", "F",
+            "F", "G", "G", "G", "H", "H", "I", "I", "I", "I",
+            "I", "I", "I", "I", "I", "J", "K", "L", "L", "L",
+            "L", "M", "M", "N", "N", "N", "N", "N", "N", "O",
+            "O", "O", "O", "O", "O", "O", "O", "P", "P", "Q",
+            "R", "R", "R", "R", "R", "R", "S", "S", "S", "S",
+            "T", "T", "T", "T", "T", "T", "U", "U", "U", "U",
+            "V", "V", "W", "W", "X", "Y", "Y", "Z", "&#65343;", "&#65343;"
+        ];
+
+        // An array to store the randomised bag, and a number to keep track of how many tiles to draw.
+        let bag = Array(100);
+        let numToDraw = 7;
+
+        // A variable to hold the seeded pseudorandom number generator, and a function to get a number
+        // between 0 and 2047 for generating the check word.
+        let scrabblePng;
+        let getCheckNum=()=>parseInt(String(scrabblePng()).substr(2)) % 2047;
+
+        function randomiseBag() {
+            // Make a copy of the clean bag to randomise.
+            bag = [...cleanBag];
+
+            for (let i=cleanBag.length-1; i>0; i--){
+                // The Fisher-Yates shuffle. Work backwards through the bag and swap the current
+                // tile with a random one before it. By using the seeded PRNG, this behaviour is
+                // predictable for a given seed.
+                let randIndex = Math.floor(scrabblePng() * (i + 1));
+                [bag[i], bag[randIndex]] = [bag[randIndex], bag[i]];
+            }
+        }
+
+        $("#resetBtn").click(function() {
+            // Reset everything to a fresh state when reset is clicked.
+            $("#seedMenu").hide();
+            $("#goBtn").show();
+            $("#seedMenu input").removeClass("validate");
+            $("#seedMenu input").val("");
+            $("#seed1, #seed2").prop("readonly", false);
+
+            $("#gameMenu").hide();
+            $("#tilesOut").html("");
+            $("#tilesOut").collapse("hide");
+            $("[data-draw-inc=1]").prop("disabled", true);
+            $("[data-draw-inc=-1]").prop("disabled", false);
+            numToDraw = 7;
+            $("#drwCount").text("7 Tiles");
+            $("#tilesLeft").text("100 tiles left").removeClass("text-danger");
+
+            $(this).hide();
+            $("#startMenu").show();
+        });
+
+        $("#startMenu button").click(function() {
+            // When either start button is clicked, move to the seed menu and show the reset button.
+            $("#startMenu").hide();
+            $("#resetBtn").show();
+            $("#seedMenu").show();
+        });
+
+        $("#startMenu #genBtn").click(function() {
+            // When the 'generate' start button is clicked, also pick two random words, seed the PRNG
+            // and calculate the check word.
+            let seed1 = bipWords[Math.floor(Math.random() * bipWords.length)];
+            let seed2 = bipWords[Math.floor(Math.random() * bipWords.length)];
+            scrabblePng = new Math.seedrandom(`${seed1}-${seed2}`);
+            $("#seed1").val(seed1);
+            $("#seed2").val(seed2);
+            $("#check").val(bipWords[getCheckNum()]);
+        });
+
+        $("#seedMenu input").keyup(function() {
+            // With any typing in the seed inputs, reseed the PRNG and recalculate the check word.
+            scrabblePng = new Math.seedrandom(`${$("#seed1").val().toLowerCase()}-${$("#seed2").val().toLowerCase()}`);
+            $("#check").val(bipWords[getCheckNum()]);
+        })
+
+        $("#seedMenu #goBtn").click(function() {
+            // When the go button is clicked, make sure a seed has been entered, then randomise the
+            // bag and show the main controls.
+            if ($("#seed1").val() && $("#seed2").val()) {
+                $("#seedMenu input").removeClass("validate").prop("readonly", true);
+                randomiseBag();
+                $(this).hide();
+                $("#gameMenu").show();
+            } else {
+                // If one of the seeds is missing, highlight the box.
+                $("#seedMenu input").addClass("validate");
+            }
+        });
+
+        $("[data-draw-inc]").click(function() {
+            // When the + or - button is clicked, increment/decrement the number of tiles to draw.
+            numToDraw += $(this).data("draw-inc");
+            updateIncBtns();
+        });
+        function updateIncBtns() {
+            // The number drawn should always between 1 and 7, or less if there's fewer than 7 tiles left.
+            numToDraw = Math.min(Math.max(numToDraw, 1), Math.min(7, bag.length));
+
+            // Disable buttons if they would make the number go out of range.
+            $("[data-draw-inc=1]").prop("disabled", numToDraw >= Math.min(7, bag.length));
+            $("[data-draw-inc=-1]").prop("disabled", numToDraw <= 1);
+
+            // Update the shown number.
+            $("#drwCount").text(`${numToDraw} Tile${numToDraw==1?"":"s"}`);
+        }
+
+        $("[data-show-drawn]").click(function() {
+            // When the discard or draw button is clicked, splice the required number of times from
+            // the beginning of the bag. If drawing, show them, if discarding, don't.
+            let drawnTiles = bag.splice(0, numToDraw);
+
+            if ($(this).data("show-drawn") && drawnTiles.length > 0) {
+                // If the tiles are drawn, show them.
+                $("#tilesOut").html(`<strong>Add ${numToDraw==1?"this tile":"these tiles"} to your rack:</strong><br>`);
+                drawnTiles.forEach(tile => $("#tilesOut").append(`<span class="scrabble-tile">${tile}</span>`));
+                $("#tilesOut").collapse("show");
+                $("html, body").stop().animate({scrollTop: $("#tilesOut").offset().top}, 500);
+            } else {
+                // If the tiles are discarded, collapse the tile output section.
+                $("#tilesOut").collapse("hide");
+            }
+
+            // Update the remaining count and keep the increment amount within the remaining amount.
+            $("#tilesLeft").text(`${bag.length} tile${bag.length==1?"":"s"} left`).toggleClass("text-danger", bag.length==0);
+            updateIncBtns();
+        })
+
+        // Open the instructions when the page is first loaded.
+        // $("#instructions").modal("show");
+
+    </script>
+    </body>
+</html>
